@@ -73,25 +73,26 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-//      RETROFIT --  doesn't seem to work with my localhost api.
         APIHandler api = new APIHandler();
         final APIHandlerInterface apiService = api.getClient().create(APIHandlerInterface.class);
 
 
-        Call<WeightEntryResponse> call = apiService.getWeightEntries();
-        call.enqueue(new Callback<WeightEntryResponse>() {
+        Call<WeightEntry[]> call = apiService.getWeightEntries();
+        call.enqueue(new Callback<WeightEntry[]>() {
             @Override
-            public void onResponse(Call<WeightEntryResponse> call, Response<WeightEntryResponse> response) {
+            public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
                 int statusCode = response.code();
-                WeightEntryResponse entries = response.body();
-//                entries.parseJSON();
+                WeightEntry[] entries = response.body();
                 Log.d("API", statusCode + "");
+                Toast.makeText(MainActivity.this, statusCode+"", Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
-            public void onFailure(Call<WeightEntryResponse> call, Throwable t) {
+            public void onFailure(Call<WeightEntry[]> call, Throwable t) {
                 t.printStackTrace();
                 Log.d("API", "ERROR");
+                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -100,7 +101,6 @@ public class MainActivity extends AppCompatActivity
         Button btn = (Button) findViewById(R.id.button1);
         btn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Toast.makeText(MainActivity.this, "You clicked the button", Toast.LENGTH_SHORT).show();
                 Call<WeightEntry> call = apiService.getWeightEntry();
                 call.enqueue(new Callback<WeightEntry>() {
                     @Override
@@ -108,10 +108,13 @@ public class MainActivity extends AppCompatActivity
                         int statusCode = response.code();
                         WeightEntry entry = response.body();
                         Log.d("API", statusCode + "");
+                        Toast.makeText(MainActivity.this, statusCode+"", Toast.LENGTH_SHORT).show();
+
                     }
 
                     @Override
                     public void onFailure(Call<WeightEntry> call, Throwable t) {
+                        Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
                         t.printStackTrace();
                         Log.d("API", "ERROR");
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -11,14 +12,16 @@ import java.util.List;
  */
 
 public class WeightEntryResponse {
-    List<WeightEntry> entries;
+    public ArrayList<WeightEntry> entries;
 
     public WeightEntryResponse() {
         entries = new ArrayList<WeightEntry>();
     }
 
     public static WeightEntryResponse parseJSON(String response) {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new GsonBuilder()
+                .registerTypeAdapter(Date.class, new DateDeserializer())
+                .create();
         WeightEntryResponse weightEntryResponse = gson.fromJson(response, WeightEntryResponse.class);
         return weightEntryResponse;
     }

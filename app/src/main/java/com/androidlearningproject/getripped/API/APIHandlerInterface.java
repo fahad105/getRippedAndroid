@@ -17,7 +17,7 @@ import retrofit2.http.Query;
 public interface APIHandlerInterface {
     @Headers({"Content-Type: application/json", "Host: localhost"})
     @GET("weight")
-    Call<WeightEntryResponse> getWeightEntries();
+    Call<WeightEntry[]> getWeightEntries();
 
     @Headers({"Content-Type: application/json", "Host: localhost"})
     @GET("weight/2")

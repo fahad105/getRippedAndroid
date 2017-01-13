@@ -16,7 +16,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class APIHandler {
 
-    public static final String BASE_URL = "http://10.0.2.2:54303/api/"; //"https://jsonplaceholder.typicode.com/";
+    public static final String BASE_URL = "http://getrippedapi.azurewebsites.net/api/"; //"https://jsonplaceholder.typicode.com/";
     public APIHandlerInterface apiService;
 
     public Retrofit retrofit;
@@ -24,25 +24,6 @@ public class APIHandler {
         Gson gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
                 .create();
-
-//        Interceptor interceptor = new Interceptor() {
-//            @Override
-//            public okhttp3.Response intercept(Chain chain) throws IOException {
-//
-//                Request original = chain.request();
-//
-//                Request newRequest = chain.request().newBuilder()
-//                        .addHeader("Content-Type", "application/json")
-//                        .addHeader("Host", "localhost") // TODO: remove this when api is not on localhost anymore
-//                        .build();
-//
-//                return chain.proceed(newRequest);
-//            }
-//        };
-//
-//        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-//        builder.interceptors().add(interceptor);
-//        OkHttpClient client = builder.build();
 
 
         retrofit = new Retrofit.Builder()
@@ -65,3 +46,23 @@ public class APIHandler {
     }
 
 }
+
+
+//        Interceptor interceptor = new Interceptor() {
+//            @Override
+//            public okhttp3.Response intercept(Chain chain) throws IOException {
+//
+//                Request original = chain.request();
+//
+//                Request newRequest = chain.request().newBuilder()
+//                        .addHeader("Content-Type", "application/json")
+//                        .addHeader("Host", "localhost") // TODO: remove this when api is not on localhost anymore
+//                        .build();
+//
+//                return chain.proceed(newRequest);
+//            }
+//        };
+//
+//        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+//        builder.interceptors().add(interceptor);
+//        OkHttpClient client = builder.build();

@@ -15,12 +15,12 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface APIHandlerInterface {
-    @Headers({"Content-Type: application/json", "Host: localhost"})
+    @Headers({"Content-Type: application/json"})
     @GET("weight")
     Call<WeightEntry[]> getWeightEntries();
 
-    @Headers({"Content-Type: application/json", "Host: localhost"})
-    @GET("weight/2")
-    Call<WeightEntry> getWeightEntry();
+    @Headers({"Content-Type: application/json"})
+    @GET("weight/{weightEntryId}")
+    Call<WeightEntry> getWeightEntry(@Path("weightEntryId") int weightEntryId);
 
 }

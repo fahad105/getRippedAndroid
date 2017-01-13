@@ -6,4 +6,11 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+
+    <!-- DIALOG TEXTS -->
+    <string name="new_title">New weight entry</string>
+    <string name="cancel">Cancel</string>
+    <string name="create">Create</string>
+    <string name="update">Update</string>
+
 </resources>

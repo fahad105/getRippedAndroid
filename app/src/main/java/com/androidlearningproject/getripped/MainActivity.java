@@ -1,12 +1,10 @@
 package com.androidlearningproject.getripped;
 
-import android.app.Dialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -21,13 +19,12 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.NumberPicker;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.androidlearningproject.getripped.API.APIHandler;
 import com.androidlearningproject.getripped.API.APIHandlerInterface;
 import com.androidlearningproject.getripped.API.ResponseEntities.WeightEntry;
-import com.androidlearningproject.getripped.API.ResponseEntities.WeightEntryResponse;
 import com.androidlearningproject.getripped.Adapters.WeightAdapter;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -35,19 +32,15 @@ import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, DatePickerDialog.OnDateSetListener{
+        implements NavigationView.OnNavigationItemSelectedListener, DatePickerDialog.OnDateSetListener {
 
 
     /**
@@ -55,6 +48,8 @@ public class MainActivity extends AppCompatActivity
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
+    private WeightAdapter adapter;
+    private ArrayList<WeightEntry> entries;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,65 +60,6 @@ public class MainActivity extends AppCompatActivity
         this.setTitle(R.string.toolbar_dashboard);
 
         final FragmentManager fragmentManager = getFragmentManager();
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                builder.setTitle(R.string.new_title)
-                .setView(view.inflate(view.getContext(), R.layout.create_weight_entry_dialog, null))
-                .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User clicked OK button
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-                    }
-                });
-
-
-                final AlertDialog dialog = builder.create();
-
-                dialog.show();
-
-                Button btn = (Button)dialog.findViewById(R.id.btn_date_dialog);
-                btn.setOnClickListener(new View.OnClickListener(){
-                    @Override
-                    public void onClick(View view){
-
-                        Calendar now = Calendar.getInstance();
-                        DatePickerDialog dpd = DatePickerDialog.newInstance(
-                                MainActivity.this,
-                                now.get(Calendar.YEAR),
-                                now.get(Calendar.MONTH),
-                                now.get(Calendar.DAY_OF_MONTH)
-                        );
-
-                        dpd.show(fragmentManager, "Datepickerdialog");
-                        Log.d("DATE BTN", "clicked");
-                        dpd.setOnDateSetListener(new DatePickerDialog.OnDateSetListener() {
-                            @Override
-                            public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-                                String date = dayOfMonth+"/"+(monthOfYear+1)+"/"+year;
-                                EditText et = (EditText)dialog.findViewById(R.id.new_entry_date);
-                                et.setText(date);
-                            }
-                        });
-                        }
-
-
-
-                });
-
-
-
-            }
-        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -139,15 +75,25 @@ public class MainActivity extends AppCompatActivity
 
         final ListView listView = (ListView) findViewById(R.id.list_view);
 
+        entries = new ArrayList<WeightEntry>();
+
+        adapter = new WeightAdapter(MainActivity.super.getApplicationContext(), entries);
+        listView.setAdapter(adapter);
+
         Call<WeightEntry[]> call = apiService.getWeightEntries();
         call.enqueue(new Callback<WeightEntry[]>() {
             @Override
             public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
+
                 int statusCode = response.code();
-                WeightEntry[] entries = response.body();
                 Log.d("API", statusCode + "");
-                WeightAdapter adapter = new WeightAdapter(MainActivity.super.getApplicationContext(), entries);
-                listView.setAdapter(adapter);
+
+                WeightEntry[] retrievedEntries = response.body();
+                for( WeightEntry entry : retrievedEntries){
+                    entries.add(entry);
+                }
+                adapter.notifyDataSetChanged();
+
             }
 
             @Override
@@ -160,12 +106,107 @@ public class MainActivity extends AppCompatActivity
         });
 
 
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
 
+                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+                builder.setTitle(R.string.new_title)
+                        .setView(view.inflate(view.getContext(), R.layout.create_weight_entry_dialog, null))
+                        .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                // User cancelled the dialog
+                            }
+                        });
+
+
+                final AlertDialog dialog = builder.create();
+
+                dialog.show();
+
+                Button btn = (Button) dialog.findViewById(R.id.btn_date_dialog);
+                btn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        Calendar now = Calendar.getInstance();
+                        DatePickerDialog dpd = DatePickerDialog.newInstance(
+                                MainActivity.this,
+                                now.get(Calendar.YEAR),
+                                now.get(Calendar.MONTH),
+                                now.get(Calendar.DAY_OF_MONTH)
+                        );
+
+                        dpd.show(fragmentManager, "Datepickerdialog");
+                        Log.d("DATE BTN", "clicked");
+                        dpd.setOnDateSetListener(new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
+                                String date = year + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
+                                EditText et = (EditText) dialog.findViewById(R.id.date_value);
+                                et.setText(date);
+                            }
+                        });
+                    }
+
+
+                });
+
+                Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                createButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        WeightEntry entry = new WeightEntry();
+
+                        TextView date = (TextView) dialog.findViewById(R.id.date_value);
+                        entry.timestamp = date.getText().toString();
+
+
+                        TextView tv = (TextView) dialog.findViewById(R.id.weight_value);
+                        entry.value = Double.parseDouble(tv.getText().toString());
+
+                        TextView remark = (TextView) dialog.findViewById(R.id.remark_value);
+                        entry.remark = remark.getText().toString();
+
+                        Call<WeightEntry> call = apiService.createWeightEntry(entry);
+                        call.enqueue(new Callback<WeightEntry>() {
+                            @Override
+                            public void onResponse(Call<WeightEntry> call, Response<WeightEntry> response) {
+                                int statusCode = response.code();
+                                Log.d("API", statusCode + "");
+
+                                WeightEntry createdEntry = response.body();
+                                entries.add(createdEntry);
+                                adapter.notifyDataSetChanged();
+
+                                Toast.makeText(MainActivity.this, "Created entry", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                            }
+
+                            @Override
+                            public void onFailure(Call<WeightEntry> call, Throwable t) {
+                                Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                                t.printStackTrace();
+                                Log.d("API", "ERROR");
+
+                            }
+                        });
+                    }
+                });
+
+
+            }
+        });
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
-
 
 
     @Override
@@ -256,13 +297,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onResume(){
-        Log.d("RESUME",  "resumed");
+    public void onResume() {
+        Log.d("RESUME", "resumed");
         super.onResume();
     }
 
     @Override
     public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-        String date = dayOfMonth+"/"+(monthOfYear+1)+"/"+year;
+        String date = dayOfMonth + "/" + (monthOfYear + 1) + "/" + year;
     }
 }

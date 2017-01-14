@@ -7,24 +7,9 @@ import java.util.Date;
  */
 
 public class WeightEntry {
-    int id;
-    double value;
-    String timestamp;
-    String remark;
+    public int id;
+    public double value;
+    public String timestamp;
+    public String remark;
 
-    public int getId() {
-        return id;
-    }
-
-    public double getValue() {
-        return value;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
 }

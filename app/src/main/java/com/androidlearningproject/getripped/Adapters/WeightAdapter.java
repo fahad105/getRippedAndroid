@@ -10,12 +10,14 @@ import android.widget.TextView;
 import com.androidlearningproject.getripped.API.ResponseEntities.WeightEntry;
 import com.androidlearningproject.getripped.R;
 
+import java.util.ArrayList;
+
 /**
  * Created by FahadAli on 13-01-2017.
  */
 
 public class WeightAdapter extends ArrayAdapter<WeightEntry> {
-    public WeightAdapter(Context context, WeightEntry[] entries) {
+    public WeightAdapter(Context context, ArrayList<WeightEntry> entries) {
         super(context, 0,entries);
     }
 
@@ -30,8 +32,8 @@ public class WeightAdapter extends ArrayAdapter<WeightEntry> {
         TextView tvValue = (TextView) convertView.findViewById(R.id.tvValue);
         TextView tvTimestamp = (TextView) convertView.findViewById(R.id.tvTimestamp);
 
-        tvValue.setText(entry.getValue()+"");
-        tvTimestamp.setText(entry.getTimestamp());
+        tvValue.setText(entry.value+"");
+        tvTimestamp.setText(entry.timestamp);
 
         return convertView;
 

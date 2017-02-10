@@ -1,60 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/create_weight_entry_dialog_layout"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_centerHorizontal="true"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <EditText
-            android:layout_width="200dp"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="20dp"
-            android:layout_marginStart="20dp"
-            android:id="@+id/date_value"/>
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="0dp"
-            android:layout_marginRight="0dp"
-            android:id="@+id/btn_date_dialog"
-            android:text="Date"/>
+        android:layout_height="match_parent"
+        android:layout_marginEnd="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginStart="20dp"
+        android:orientation="horizontal"
+        android:weightSum="1"
+        >
 
+        <android.support.design.widget.TextInputLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:orientation="horizontal"
+            android:layout_weight="0.9">
+
+            <android.support.design.widget.TextInputEditText
+                android:id="@+id/date_value"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Date" />
+
+        </android.support.design.widget.TextInputLayout>
+
+        <ImageButton
+            android:id="@+id/btn_date_dialog"
+            android:layout_width="40dp"
+            android:background="@color/colorAccent"
+            app:srcCompat="@drawable/ic_date_range_white_24dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0.1"
+
+            />
     </LinearLayout>
+
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginEnd="20dp"
         android:layout_marginLeft="20dp"
-        android:layout_marginStart="20dp"
         android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp">
+        android:layout_marginStart="20dp"
+        android:orientation="horizontal">
 
         <android.support.design.widget.TextInputEditText
+            android:id="@+id/weight_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal"
             android:hint="Weight"
-            android:id="@+id/weight_value"/>
+            android:inputType="numberDecimal" />
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_marginEnd="20dp"
         android:layout_marginLeft="20dp"
-        android:layout_marginStart="20dp"
         android:layout_marginRight="20dp"
-        android:layout_marginEnd="20dp">
+        android:layout_marginStart="20dp"
+        android:orientation="horizontal">
+
         <android.support.design.widget.TextInputEditText
+            android:id="@+id/remark_value"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Remark"
-            android:id="@+id/remark_value"/>
+            android:hint="Remark" />
 
     </android.support.design.widget.TextInputLayout>
 

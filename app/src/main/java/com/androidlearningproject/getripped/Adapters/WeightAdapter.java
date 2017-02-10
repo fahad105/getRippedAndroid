@@ -29,11 +29,15 @@ public class WeightAdapter extends ArrayAdapter<WeightEntry> {
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_weight_entry, parent, false);
         }
 
+        TextView tvId = (TextView) convertView.findViewById(R.id.tvId);
         TextView tvValue = (TextView) convertView.findViewById(R.id.tvValue);
         TextView tvTimestamp = (TextView) convertView.findViewById(R.id.tvTimestamp);
+        TextView tvRemark = (TextView) convertView.findViewById(R.id.tvRemark);
 
-        tvValue.setText(entry.value+"");
-        tvTimestamp.setText(entry.timestamp);
+        tvId.setText("ID: "+entry.id);
+        tvValue.setText("Weight: "+entry.value+"");
+        tvTimestamp.setText("Timestamp: "+entry.timestamp);
+        tvRemark.setText("Remark: "+entry.remark);
 
         return convertView;
 

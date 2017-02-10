@@ -13,4 +13,9 @@
     <string name="create">Create</string>
     <string name="update">Update</string>
 
+    <!-- Context menu for listview item long press -->
+    <array name="context_menu">
+        <item>Edit</item>
+        <item>Delete</item>
+    </array>
 </resources>

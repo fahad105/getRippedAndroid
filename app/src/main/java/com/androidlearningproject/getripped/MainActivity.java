@@ -4,6 +4,7 @@ import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AlertDialog;
@@ -35,6 +36,9 @@ import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -50,166 +54,106 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<WeightEntry> entries;
     private Calendar now;
     private APIHandlerInterface apiService;
+    private FragmentManager fragmentManager;
+
+    @BindView(R.id.nav_view)
+    NavigationView navigationView;
+    @BindView(R.id.list_view)
+    ListView listView;
+    @BindView(R.id.drawer_layout)
+    DrawerLayout drawer;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        fragmentManager = getFragmentManager();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         this.setTitle(R.string.toolbar_dashboard);
+        now = Calendar.getInstance();
 
-        final FragmentManager fragmentManager = getFragmentManager();
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        now = Calendar.getInstance();
 
         APIHandler api = new APIHandler();
         apiService = api.getClient().create(APIHandlerInterface.class);
 
-        final ListView listView = (ListView) findViewById(R.id.list_view);
         registerForContextMenu(listView);
-
         entries = new ArrayList<WeightEntry>();
-
         adapter = new WeightAdapter(MainActivity.super.getApplicationContext(), entries);
         listView.setAdapter(adapter);
 
+        callGetAllWeightEntries();
+    }
 
-        Call<WeightEntry[]> call = apiService.getWeightEntries();
-        call.enqueue(new Callback<WeightEntry[]>() {
-            @Override
-            public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
+    @OnClick(R.id.fab)
+    public void openCreateEntryDialog(View view) {
+        View dialogView = View.inflate(view.getContext(), R.layout.create_weight_entry_dialog, null);
 
-                int statusCode = response.code();
-                Log.d("API", statusCode + "");
+        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
+        builder.setTitle(R.string.new_title)
+                .setView(dialogView)
+                .setPositiveButton(R.string.create, null)
+                .setNegativeButton(R.string.cancel, null);
 
-                WeightEntry[] retrievedEntries = response.body();
-                for (WeightEntry entry : retrievedEntries) {
-                    entries.add(entry);
-                }
-                adapter.notifyDataSetChanged();
+        ButterKnife.bind(dialogView);
 
-            }
-
-            @Override
-            public void onFailure(Call<WeightEntry[]> call, Throwable t) {
-                t.printStackTrace();
-                Log.d("API", "ERROR");
-                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
-
-            }
-        });
+        final AlertDialog dialog = builder.create();
+        dialog.show();
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        final EditText dateEt = ButterKnife.findById(dialogView, R.id.date_value);
+        String date = now.get(Calendar.YEAR) + "-" + (now.get(Calendar.MONTH) + 1) + "-" + now.get(Calendar.DAY_OF_MONTH);
+        dateEt.setText(date);
+
+        final EditText weightEt = ButterKnife.findById(dialogView, R.id.weight_value);
+        weightEt.requestFocus();
+
+        final EditText remarkEt = ButterKnife.findById(dialogView, R.id.remark_value);
+
+        ImageButton dateDialogButton = ButterKnife.findById(dialog, R.id.btn_date_dialog);
+        dateDialogButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                DatePickerDialog dpd = DatePickerDialog.newInstance(
+                        MainActivity.this,
+                        now.get(Calendar.YEAR),
+                        now.get(Calendar.MONTH),
+                        now.get(Calendar.DAY_OF_MONTH)
+                );
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-                builder.setTitle(R.string.new_title)
-                        .setView(inflate(view.getContext(), R.layout.create_weight_entry_dialog, null))
-                        .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // User cancelled the dialog
-                            }
-                        });
-
-                final AlertDialog dialog = builder.create();
-                dialog.show();
-
-                EditText et = (EditText) dialog.findViewById(R.id.date_value);
-                String date = now.get(Calendar.YEAR) + "-" + (now.get(Calendar.MONTH) + 1) + "-" + now.get(Calendar.DAY_OF_MONTH);
-                et.setText(date);
-
-                EditText weightEt = (EditText) dialog.findViewById(R.id.weight_value);
-                weightEt.requestFocus();
-                ImageButton btn = (ImageButton) dialog.findViewById(R.id.btn_date_dialog);
-                btn.setOnClickListener(new View.OnClickListener() {
+                dpd.show(fragmentManager, "Datepickerdialog");
+                dpd.setOnDateSetListener(new DatePickerDialog.OnDateSetListener() {
                     @Override
-                    public void onClick(View view) {
-
-                        DatePickerDialog dpd = DatePickerDialog.newInstance(
-                                MainActivity.this,
-                                now.get(Calendar.YEAR),
-                                now.get(Calendar.MONTH),
-                                now.get(Calendar.DAY_OF_MONTH)
-                        );
-
-                        dpd.show(fragmentManager, "Datepickerdialog");
-                        Log.d("DATE BTN", "clicked");
-                        dpd.setOnDateSetListener(new DatePickerDialog.OnDateSetListener() {
-                            @Override
-                            public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-                                String date = year + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
-                                EditText et = (EditText) dialog.findViewById(R.id.date_value);
-                                et.setText(date);
-                            }
-                        });
-                    }
-
-
-                });
-
-                Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
-                createButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        WeightEntry entry = new WeightEntry();
-
-                        TextView date = (TextView) dialog.findViewById(R.id.date_value);
-                        entry.timestamp = date.getText().toString();
-
-                        TextView tv = (TextView) dialog.findViewById(R.id.weight_value);
-                        entry.value = Double.parseDouble(tv.getText().toString());
-
-                        TextView remark = (TextView) dialog.findViewById(R.id.remark_value);
-                        entry.remark = remark.getText().toString();
-
-                        Call<WeightEntry> call = apiService.createWeightEntry(entry);
-                        call.enqueue(new Callback<WeightEntry>() {
-                            @Override
-                            public void onResponse(Call<WeightEntry> call, Response<WeightEntry> response) {
-                                int statusCode = response.code();
-                                Log.d("API", statusCode + "");
-
-                                WeightEntry createdEntry = response.body();
-                                entries.add(createdEntry);
-                                adapter.notifyDataSetChanged();
-
-                                Toast.makeText(MainActivity.this, "Created entry", Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
-                            }
-
-                            @Override
-                            public void onFailure(Call<WeightEntry> call, Throwable t) {
-                                Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
-                                t.printStackTrace();
-                                Log.d("API", "ERROR");
-
-                            }
-                        });
+                    public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
+                        String date = year + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
+                        dateEt.setText(date);
                     }
                 });
-
-
             }
         });
 
+        Button createButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        createButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                WeightEntry entry = new WeightEntry();
+
+                entry.timestamp = dateEt.getText().toString();
+                entry.value = Double.parseDouble(weightEt.getText().toString());
+                entry.remark = remarkEt.getText().toString();
+
+                callCreateWeightEntry(entry);
+                dialog.dismiss();
+            }
+        });
     }
 
     @Override
@@ -226,6 +170,59 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void callCreateWeightEntry(WeightEntry entry) {
+        Call<WeightEntry> call = apiService.createWeightEntry(entry);
+        call.enqueue(new Callback<WeightEntry>() {
+            @Override
+            public void onResponse(Call<WeightEntry> call, Response<WeightEntry> response) {
+                int statusCode = response.code();
+                Log.d("API", statusCode + "");
+
+                WeightEntry createdEntry = response.body();
+                entries.add(createdEntry);
+                adapter.notifyDataSetChanged();
+
+                Toast.makeText(MainActivity.this, "Created entry", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<WeightEntry> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
+                t.printStackTrace();
+                Log.d("API", "ERROR");
+
+            }
+        });
+
+    }
+
+    public void callGetAllWeightEntries() {
+        adapter.clear();
+        Call<WeightEntry[]> call = apiService.getWeightEntries();
+        call.enqueue(new Callback<WeightEntry[]>() {
+            @Override
+            public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
+
+                int statusCode = response.code();
+                Log.d("API", statusCode + "");
+
+                WeightEntry[] retrievedEntries = response.body();
+                for (WeightEntry entry : retrievedEntries) {
+                    entries.add(entry);
+                }
+                adapter.notifyDataSetChanged();
+
+            }
+            @Override
+            public void onFailure(Call<WeightEntry[]> call, Throwable t) {
+                t.printStackTrace();
+                Log.d("API", "ERROR");
+                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
+
     public void callDeleteWeightEntry(WeightEntry entry, final int index) { // TODO: Make these call methods for Create/Update/Get as well
         Call<ResponseBody> call = apiService.deleteWeightEntry(entry.id);
         call.enqueue(new Callback<ResponseBody>() {
@@ -239,13 +236,11 @@ public class MainActivity extends AppCompatActivity
                     adapter.notifyDataSetChanged();
                 }
             }
-
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 Toast.makeText(MainActivity.this, "Invalid input!", Toast.LENGTH_SHORT).show();
                 t.printStackTrace();
                 Log.d("API", "ERROR");
-
             }
         });
     }
@@ -345,34 +340,10 @@ public class MainActivity extends AppCompatActivity
                         Log.d("API", "ERROR");
 
                         //at this point entry was changed in adapter but not in database bacause the API call failed. reset adapter?
-                        adapter.clear();
-                        Call<WeightEntry[]> callGetAll = apiService.getWeightEntries();
-                        callGetAll.enqueue(new Callback<WeightEntry[]>() {
-                            @Override
-                            public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
 
-                                int statusCode = response.code();
-                                Log.d("API", statusCode + "");
-
-                                WeightEntry[] retrievedEntries = response.body();
-                                for (WeightEntry entry : retrievedEntries) {
-                                    entries.add(entry);
-                                }
-                                adapter.notifyDataSetChanged();
-
-                            }
-
-                            @Override
-                            public void onFailure(Call<WeightEntry[]> call, Throwable t) {
-                                t.printStackTrace();
-                                Log.d("API", "ERROR");
-                                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
-
-                            }
-                        });
+                        callGetAllWeightEntries();
                     }
                 });
-
                 dialog.dismiss();
             }
         });
@@ -383,8 +354,6 @@ public class MainActivity extends AppCompatActivity
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
         int menuItemIndex = item.getItemId();
         WeightEntry selectedEntry = entries.get(info.position);
-
-
         switch (menuItemIndex) {
             case 0://Edit
                 Log.d("ListView", "Edit clicked");
@@ -395,7 +364,6 @@ public class MainActivity extends AppCompatActivity
                 callDeleteWeightEntry(selectedEntry, info.position);
                 break;
         }
-
         return true;
     }
 
@@ -418,20 +386,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             Log.d("myTag", "settings clicked");
+            //make settings Activity
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
-
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
@@ -443,7 +405,7 @@ public class MainActivity extends AppCompatActivity
             Log.d("myTag", "share clicked");
         }
 
-        //nav drawer options for Weight, Exercises, Goals, Settings
+        //TODO: nav drawer options for Weight, Exercises, Goals, Settings once those activities are implemented
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -451,19 +413,14 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     @Override
     public void onStart() {
         super.onStart();
-
-
     }
 
     @Override
     public void onStop() {
         super.onStop();
-
-
     }
 
     @Override
@@ -474,6 +431,5 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
-        String date = dayOfMonth + "/" + (monthOfYear + 1) + "/" + year;
     }
 }

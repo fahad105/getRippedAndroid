@@ -2,9 +2,7 @@ package com.androidlearningproject.getripped;
 
 import android.app.FragmentManager;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AlertDialog;
@@ -43,9 +41,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.http.Body;
-
-import static android.view.View.inflate;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, DatePickerDialog.OnDateSetListener {
@@ -64,6 +59,7 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawer;
     @BindView(R.id.fab)
     FloatingActionButton fab;
+    @BindView(R.id.toolbar) Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +67,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         fragmentManager = getFragmentManager();
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         this.setTitle(R.string.toolbar_dashboard);
         now = Calendar.getInstance();
@@ -96,18 +91,9 @@ public class MainActivity extends AppCompatActivity
     @OnClick(R.id.fab)
     public void openCreateEntryDialog(View view) {
         View dialogView = View.inflate(view.getContext(), R.layout.create_weight_entry_dialog, null);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
-        builder.setTitle(R.string.new_title)
-                .setView(dialogView)
-                .setPositiveButton(R.string.create, null)
-                .setNegativeButton(R.string.cancel, null);
-
+        final AlertDialog dialog = openCreateOrEditDialog("New weight entry", "Create", dialogView);
         ButterKnife.bind(dialogView);
-
-        final AlertDialog dialog = builder.create();
         dialog.show();
-
 
         final EditText dateEt = ButterKnife.findById(dialogView, R.id.date_value);
         String date = now.get(Calendar.YEAR) + "-" + (now.get(Calendar.MONTH) + 1) + "-" + now.get(Calendar.DAY_OF_MONTH);
@@ -202,16 +188,13 @@ public class MainActivity extends AppCompatActivity
         call.enqueue(new Callback<WeightEntry[]>() {
             @Override
             public void onResponse(Call<WeightEntry[]> call, Response<WeightEntry[]> response) {
-
                 int statusCode = response.code();
                 Log.d("API", statusCode + "");
-
                 WeightEntry[] retrievedEntries = response.body();
                 for (WeightEntry entry : retrievedEntries) {
                     entries.add(entry);
                 }
                 adapter.notifyDataSetChanged();
-
             }
             @Override
             public void onFailure(Call<WeightEntry[]> call, Throwable t) {
@@ -246,41 +229,24 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void callEditWeightEntry(final WeightEntry entry, final int index) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Edit entry")
-                .setView(R.layout.create_weight_entry_dialog)
-                .setPositiveButton("Edit", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        Log.d("EDIT", "CLICKED OK");
-
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        // User cancelled the dialog
-                        Log.d("EDIT", "CLICKED CANCEL");
-
-                    }
-                });
-
-
-        final AlertDialog dialog = builder.create();
+        View dialogView = View.inflate(MainActivity.this, R.layout.create_weight_entry_dialog, null);
+        final AlertDialog dialog = openCreateOrEditDialog("Edit weight entry", "Save", dialogView);
+        ButterKnife.bind(dialogView);
         dialog.show();
 
-        TextInputEditText date = (TextInputEditText) dialog.findViewById(R.id.date_value);
-        date.setText(entry.timestamp.split("T")[0]);
+        final TextInputEditText dateInput = ButterKnife.findById(dialogView, R.id.date_value);
+        dateInput.setText(entry.timestamp.split("T")[0]);
 
-        TextInputEditText weight = (TextInputEditText) dialog.findViewById(R.id.weight_value);
-        weight.setText(entry.value + "");
+        final TextInputEditText weightInput = ButterKnife.findById(dialogView, R.id.weight_value);
+        weightInput.setText(entry.value + "");
 
-        TextInputEditText remark = (TextInputEditText) dialog.findViewById(R.id.remark_value);
-        remark.setText(entry.remark);
+        final TextInputEditText remarkInput = ButterKnife.findById(dialogView, R.id.remark_value);
+        remarkInput.setText(entry.remark);
 
-        ImageButton btn = (ImageButton) dialog.findViewById(R.id.btn_date_dialog);
+        ImageButton btn = ButterKnife.findById(dialogView, R.id.btn_date_dialog);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 DatePickerDialog dpd = DatePickerDialog.newInstance(
                         MainActivity.this,
                         Integer.parseInt(entry.timestamp.split("T")[0].split("-")[0]), //year
@@ -294,13 +260,10 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onDateSet(DatePickerDialog view, int year, int monthOfYear, int dayOfMonth) {
                         String date = year + "-" + (monthOfYear + 1) + "-" + dayOfMonth;
-                        EditText et = (EditText) dialog.findViewById(R.id.date_value);
-                        et.setText(date);
+                        dateInput.setText(date);
                     }
                 });
             }
-
-
         });
 
         Button editButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
@@ -308,14 +271,9 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 //update entry in adapter
-                TextView date = (TextView) dialog.findViewById(R.id.date_value);
-                entry.timestamp = date.getText().toString();
-
-                TextView tv = (TextView) dialog.findViewById(R.id.weight_value);
-                entry.value = Double.parseDouble(tv.getText().toString());
-
-                TextView remark = (TextView) dialog.findViewById(R.id.remark_value);
-                entry.remark = remark.getText().toString();
+                entry.timestamp = dateInput.getText().toString();
+                entry.value = Double.parseDouble(weightInput.getText().toString());
+                entry.remark = remarkInput.getText().toString();
 
                 Call<ResponseBody> call = apiService.editWeightEntry(entry, entry.id);
                 call.enqueue(new Callback<ResponseBody>() {
@@ -328,9 +286,7 @@ public class MainActivity extends AppCompatActivity
                             Toast.makeText(MainActivity.this, "Succesfully edited entry", Toast.LENGTH_SHORT).show();
                             adapter.notifyDataSetChanged();
                         }
-
                         dialog.dismiss();
-
                     }
 
                     @Override
@@ -347,6 +303,18 @@ public class MainActivity extends AppCompatActivity
                 dialog.dismiss();
             }
         });
+    }
+
+    public AlertDialog openCreateOrEditDialog(String createOrEditTitleString, String createOrEditButtonString, View view){
+        View dialogView = view;
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(createOrEditTitleString)
+                .setView(dialogView)
+                .setPositiveButton(createOrEditButtonString, null)
+                .setNegativeButton(R.string.cancel, null);
+
+        AlertDialog dialog = builder.create();
+        return dialog;
     }
 
     @Override
@@ -369,7 +337,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -406,12 +373,9 @@ public class MainActivity extends AppCompatActivity
         }
 
         //TODO: nav drawer options for Weight, Exercises, Goals, Settings once those activities are implemented
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-
 
     @Override
     public void onStart() {

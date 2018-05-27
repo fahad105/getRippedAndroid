@@ -9,7 +9,7 @@ import java.util.Date;
 public class WeightEntry {
     public int id;
     public double value;
-    public String timestamp;
+    public Date timestamp;
     public String remark;
 
 }

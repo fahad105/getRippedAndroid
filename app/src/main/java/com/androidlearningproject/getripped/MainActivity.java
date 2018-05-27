@@ -31,8 +31,12 @@ import com.androidlearningproject.getripped.API.ResponseEntities.WeightEntry;
 import com.androidlearningproject.getripped.Adapters.WeightAdapter;
 import com.wdullaer.materialdatetimepicker.date.DatePickerDialog;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -50,6 +54,7 @@ public class MainActivity extends AppCompatActivity
     private Calendar now;
     private APIHandlerInterface apiService;
     private FragmentManager fragmentManager;
+    private DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
     @BindView(R.id.nav_view)
     NavigationView navigationView;
@@ -84,7 +89,6 @@ public class MainActivity extends AppCompatActivity
         entries = new ArrayList<WeightEntry>();
         adapter = new WeightAdapter(MainActivity.super.getApplicationContext(), entries);
         listView.setAdapter(adapter);
-
         callGetAllWeightEntries();
     }
 
@@ -132,7 +136,13 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 WeightEntry entry = new WeightEntry();
 
-                entry.timestamp = dateEt.getText().toString();
+
+                try {
+                    entry.timestamp = formatter.parse(dateEt.getText().toString());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
                 entry.value = Double.parseDouble(weightEt.getText().toString());
                 entry.remark = remarkEt.getText().toString();
 
@@ -200,7 +210,7 @@ public class MainActivity extends AppCompatActivity
             public void onFailure(Call<WeightEntry[]> call, Throwable t) {
                 t.printStackTrace();
                 Log.d("API", "ERROR");
-                Toast.makeText(MainActivity.this, "ERROR", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "API BROKE", Toast.LENGTH_SHORT).show();
 
             }
         });
@@ -235,7 +245,7 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
 
         final TextInputEditText dateInput = ButterKnife.findById(dialogView, R.id.date_value);
-        dateInput.setText(entry.timestamp.split("T")[0]);
+        dateInput.setText(android.text.format.DateFormat.format("yyyy-MM-dd", entry.timestamp));
 
         final TextInputEditText weightInput = ButterKnife.findById(dialogView, R.id.weight_value);
         weightInput.setText(entry.value + "");
@@ -244,14 +254,15 @@ public class MainActivity extends AppCompatActivity
         remarkInput.setText(entry.remark);
 
         ImageButton btn = ButterKnife.findById(dialogView, R.id.btn_date_dialog);
+
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 DatePickerDialog dpd = DatePickerDialog.newInstance(
                         MainActivity.this,
-                        Integer.parseInt(entry.timestamp.split("T")[0].split("-")[0]), //year
-                        Integer.parseInt(entry.timestamp.split("T")[0].split("-")[1]) - 1, //month
-                        Integer.parseInt(entry.timestamp.split("T")[0].split("-")[2]) //day of month
+                        entry.timestamp.getYear() + 1900,
+                        entry.timestamp.getMonth(),
+                        entry.timestamp.getDate()
                 );
 
                 dpd.show(getFragmentManager(), "Datepickerdialog");
@@ -271,7 +282,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 //update entry in adapter
-                entry.timestamp = dateInput.getText().toString();
+                try {
+                    entry.timestamp = formatter.parse(dateInput.getText().toString());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
                 entry.value = Double.parseDouble(weightInput.getText().toString());
                 entry.remark = remarkInput.getText().toString();
 
